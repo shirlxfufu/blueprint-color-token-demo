@@ -461,9 +461,10 @@
     const shownIntents = previewIntent === "all" ? INTENTS : [intentFor(previewIntent)];
     const components = COMPONENTS.filter(component => componentFilter === "all" || component.filter === componentFilter);
     const comparison = document.getElementById("comparison");
-    comparison.style.setProperty("--columns", visibleMethods.length);
+    comparison.style.setProperty("--columns", visibleMethods.length + 1);
     const intentSections = method => (components.length ? shownIntents.map(intent => `<div class="intent-heading" style="--intent-dot:${intent.shades[intent.id === "neutral" ? 1 : 2]}"><span class="intent-dot"></span>${intent.label}</div>${components.map(component => componentMarkup(method, component, intent)).join("")}`).join("") : "") + extraCases.sections(method, componentFilter);
-    comparison.innerHTML = visibleMethods.map(method => `<article class="method-column" data-method="${method}"><header class="method-header"><div class="method-title"><h2>${method.slice(1)} · ${METHODS[method].label}</h2><small>${totalCount(method)} tokens</small></div><p>${METHODS[method].description}</p><button type="button" class="edit-method-button" data-edit-method="${method}" aria-haspopup="dialog" aria-controls="editor">Edit tokens</button></header>${intentSections(method)}</article>`).join("");
+    // Keep the published Blueprint reference first and independent of the approach toggles.
+    comparison.innerHTML = `<article class="reference-column"><header class="method-header"><div class="method-title"><h2>Current Blueprint</h2><small>6.21.0</small></div><p>Published CSS for original components; source paint fixtures for additional cases.</p><span class="reference-version">Always shown · values stay fixed</span></header>${intentSections("reference")}</article>` + visibleMethods.map(method => `<article class="method-column" data-method="${method}"><header class="method-header"><div class="method-title"><h2>${method.slice(1)} · ${METHODS[method].label}</h2><small>${totalCount(method)} tokens</small></div><p>${METHODS[method].description}</p><button type="button" class="edit-method-button" data-edit-method="${method}" aria-haspopup="dialog" aria-controls="editor">Edit tokens</button></header>${intentSections(method)}</article>`).join("");
     mountReferences();
     applyVariables();
     updateEditorButtons();
