@@ -96,7 +96,7 @@
       layers.push(`<span class="recipe-layer">${reference ? "" : `<code>${name}</code>`}${role} · ${Math.round(value * 1000) / 10}%</span>`);
       return value;
     };
-    const result = (paint, label = "Result") => `<span class="recipe-result">${label}: ${paintLabel(paint)}</span>`;
+    const result = (paint, label = "Background") => `<span class="recipe-result">${label}: ${paintLabel(paint)}</span>`;
     let html = "", ending = "";
 
     if (kind === "tabs" || kind === "header") {
@@ -193,20 +193,22 @@
         current.forEach((node, i) => { node.style.cssText = next[i].style.cssText; });
       } else visual.innerHTML = html;
     }
-    recipe.innerHTML = layers.join("") + ending;
+    recipe.innerHTML = ending + layers.join("");
     row.dataset.renderState = state;
   }
 
   function update(context) {
     document.querySelectorAll("[data-audit-case]").forEach(row => updateRow(row, context));
     // Match heights after wrapping, including the four-intent table recipes.
-    for (const kind of cases.map(item => item.id)) {
-      const groups = [...document.querySelectorAll(`[data-component="audit-${kind}"]`)];
+    for (const kind of new Set([...document.querySelectorAll(".component-group")].map(group => group.dataset.component))) {
+      const groups = [...document.querySelectorAll(`[data-component="${kind}"]`)];
       if (!groups.length) continue;
-      const rows = groups.map(group => [...group.querySelectorAll(".audit-row")]);
+      const rows = groups.map(group => [...group.querySelectorAll(".state-row, .audit-row")]);
+      rows.flat().forEach(row => { row.style.minHeight = "0"; });
       rows[0].forEach((_, i) => {
-        rows.forEach(list => { list[i].style.minHeight = "0"; });
-        const height = Math.max(...rows.map(list => list[i].getBoundingClientRect().height));
+        const live = rows[0][i].dataset.state === "live" || rows[0][i].querySelector('[data-state="live"]');
+        const measured = live ? rows.flat() : rows.map(list => list[i]);
+        const height = Math.max(...measured.map(row => row.getBoundingClientRect().height));
         rows.forEach(list => { list[i].style.minHeight = `${Math.ceil(height)}px`; });
       });
       const notes = groups.map(group => group.querySelector(".component-note"));

@@ -288,19 +288,20 @@
     const recipe = sample.closest(".sample-area").querySelector(".sample-recipe");
     const values = tokens[method][theme];
     const layers = [];
-    const layer = (name, purpose) => `<span class="recipe-layer"><code>${name}</code><span>${purpose} · ${typeof values[name] === "number" ? `${round(values[name] * 100)}%` : paintLabel(values[name])}</span></span>`;
+    const simpleFill = !names.keyBase && !names.overlay && !names.emphasis && !names.outlined && !names.disabled;
+    const layer = (name, purpose) => `<span class="recipe-layer"><code>${name}</code>${simpleFill ? "" : `<span>${purpose} · ${typeof values[name] === "number" ? `${round(values[name] * 100)}%` : paintLabel(values[name])}</span>`}</span>`;
     if (names.keyBase) {
       layers.push(layer(names.keyBase, "Key fill"), layer(names.base, "Value fill"));
     } else if (names.base) {
       layers.push(layer(names.base, names.emphasis ? "Base pill · both halves" : "Base fill"));
-    } else {
-      layers.push('<span class="recipe-layer">No fill token · transparent base</span>');
+    } else if (names.overlay) {
+      layers.push('<span class="recipe-layer">Base · transparent</span>');
     }
     if (names.overlay) layers.push(layer(names.overlay, names.keyBase ? "Overlay above both halves" : "Overlay above base"));
     if (names.emphasis) layers.push(layer(names.emphasis, "Fixed overlay · key only"));
     if (names.outlined) layers.push(layer("opacity.outline", `Outline · ${PALETTE_NAMES[outlineSource]}`));
     if (names.disabled) layers.push(layer("opacity.disabled", "After all paint · multiply by"));
-    let result = paints.key ? `Result — Key: ${paintLabel(paints.key)}<br>Value: ${paintLabel(paints.value)}` : `Result: ${paintLabel(paints.value)}`;
+    let result = paints.key ? `Key: ${paintLabel(paints.key)}<br>Value: ${paintLabel(paints.value)}` : `Background: ${paintLabel(paints.value)}`;
     recipe.title = paints.key ? `Key: ${paintCss(paints.key)}\nValue: ${paintCss(paints.value)}` : paintCss(paints.value);
     if (names.outlined) {
       const outline = tokens[method][theme]["opacity.outline"];
@@ -308,7 +309,7 @@
       result += `<br>Outline: ${round(alpha * 100)}%`;
       recipe.title += `\nOutline: opacity.outline (${round(outline * 100)}%)${names.disabled ? ` × opacity.disabled (${round(tokens[method][theme]["opacity.disabled"] * 100)}%)` : ""} = ${round(alpha * 100)}%`;
     }
-    recipe.innerHTML = layers.join("") + `<span class="recipe-result">${result}</span>`;
+    recipe.innerHTML = `<span class="recipe-result">${result}</span>` + layers.join("");
     const used = [names.base, names.keyBase, names.overlay, names.emphasis].filter(Boolean);
     recipe.title += used.length ? `\nTokens: ${used.join(" + ")}` : "\nNo background fill";
     if (names.disabled) recipe.title += `\nPaint opacity: opacity.disabled = ${round(tokens[method][theme]["opacity.disabled"] * 100)}%`;
@@ -460,9 +461,9 @@
     const shownIntents = previewIntent === "all" ? INTENTS : [intentFor(previewIntent)];
     const components = COMPONENTS.filter(component => componentFilter === "all" || component.filter === componentFilter);
     const comparison = document.getElementById("comparison");
-    comparison.style.setProperty("--columns", visibleMethods.length + 1);
+    comparison.style.setProperty("--columns", visibleMethods.length);
     const intentSections = method => (components.length ? shownIntents.map(intent => `<div class="intent-heading" style="--intent-dot:${intent.shades[intent.id === "neutral" ? 1 : 2]}"><span class="intent-dot"></span>${intent.label}</div>${components.map(component => componentMarkup(method, component, intent)).join("")}`).join("") : "") + extraCases.sections(method, componentFilter);
-    comparison.innerHTML = `<article class="reference-column"><header class="method-header"><div class="method-title"><h2>Current Blueprint</h2><small>6.21.0</small></div><p>Published CSS for original components; source paint fixtures for additional cases.</p><span class="reference-version">Reference · values stay fixed</span></header>${intentSections("reference")}</article>` + visibleMethods.map(method => `<article class="method-column" data-method="${method}"><header class="method-header"><div class="method-title"><h2>${method.slice(1)} · ${METHODS[method].label}</h2><small>${totalCount(method)} tokens</small></div><p>${METHODS[method].description}</p><button type="button" class="edit-method-button" data-edit-method="${method}" aria-haspopup="dialog" aria-controls="editor">Edit tokens</button></header>${intentSections(method)}</article>`).join("");
+    comparison.innerHTML = visibleMethods.map(method => `<article class="method-column" data-method="${method}"><header class="method-header"><div class="method-title"><h2>${method.slice(1)} · ${METHODS[method].label}</h2><small>${totalCount(method)} tokens</small></div><p>${METHODS[method].description}</p><button type="button" class="edit-method-button" data-edit-method="${method}" aria-haspopup="dialog" aria-controls="editor">Edit tokens</button></header>${intentSections(method)}</article>`).join("");
     mountReferences();
     applyVariables();
     updateEditorButtons();
